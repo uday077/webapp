@@ -1,0 +1,31 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches:
+      - main  # Deploy when code is pushed to the main branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the repository
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # Set up SSH
+      - name: Install SSH key
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
+
+      # Copy files to EC2 instance
+      - name: Deploy HTML files to EC2
+        run: |
+          scp -r -o StrictHostKeyChecking=no ./path-to-html-files/* ec2-user@${{ secrets.EC2_HOST }}:/var/www/html/
+
+      # Restart web server (if using Apache)
+      - name: Restart Apache Server
+        run: |
+          ssh -o StrictHostKeyChecking=no ec2-user@${{ secrets.EC2_HOST }} 'sudo systemctl restart httpd'
